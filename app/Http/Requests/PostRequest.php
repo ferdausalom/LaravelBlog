@@ -27,10 +27,11 @@ class PostRequest extends FormRequest
     {
         return [
             'title' => 'required',
-            'slug' => ['required', Rule::unique('posts', 'slug')],
+            'slug' => ['required', Rule::unique('posts', 'slug')->ignore(request('post_id'))],
             'thumbnail' => 'image|mimes:jpg,png,jpeg|max:512',
             'excerpt' => 'required',
             'body' => 'required',
+            'featured' => '',
             'categories' => ['required', Rule::exists('categories', 'id')]
         ];
     }

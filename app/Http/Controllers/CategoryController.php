@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
 use Illuminate\Validation\Rule;
 use Flasher\Prime\FlasherInterface;
@@ -20,10 +21,9 @@ class CategoryController extends Controller
         return view('layouts.posts.category.create');
     }
 
-    public function store(Category $category, FlasherInterface $flasher)
+    public function store(Category $category, CategoryRequest $request, FlasherInterface $flasher)
     {
-        $request = $this->validateCategory();
-        $category->create($request);
+        $category->create($request->validated());
         $flasher->addSuccess('Category added successfully!');
         return redirect('/admin/categories');
     }
@@ -33,22 +33,11 @@ class CategoryController extends Controller
         return view('layouts.posts.category.edit', ['category' => $category]);
     }
 
-    public function update(Category $category, FlasherInterface $flasher)
+    public function update(Category $category, CategoryRequest $request, FlasherInterface $flasher)
     {
-        $request = $this->validateCategory();
-        $category->update($request);
+        $category->update($request->validated());
         $flasher->addSuccess('Category updated successfully!');
         return redirect('/admin/categories');
-    }
-
-    protected function validateCategory()
-    {
-        $request = request()->validate([
-            'name' => ['required', Rule::unique('categories', 'name')]
-        ]);
-
-        $request['name'] = strtolower($request['name']);
-        return $request;
     }
 
     public function destroy(Category $category, FlasherInterface $flasher)

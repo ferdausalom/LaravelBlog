@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PostRequest;
 use App\Models\Category;
 use App\Models\Post;
-use Illuminate\Validation\Rule;
 use Flasher\Prime\FlasherInterface;
 
 class PostController extends Controller
@@ -40,37 +39,11 @@ class PostController extends Controller
         ]);
     }
 
-    public function update(Post $post, FlasherInterface $flasher)
+    public function update(Post $post, PostRequest $request, FlasherInterface $flasher)
     {
-        $request = $this->validateUpdate($post);
-
-        if (request()->file('thumbnail')) {
-            $request['thumbnail'] = request()->file('thumbnail')->store('thumbnails');
-        }
-
-        if (request('featured')) {
-            $request['featured'] = 1;
-        } else {
-            $request['featured'] = 0;
-        }
-
-        $post->update($request);
-        $post->categories()->sync(request('categories'));
+        $post->storePost($request);
         $flasher->addSuccess('Post updated successfully!');
         return redirect('/admin');
-    }
-
-    protected function validateUpdate($post)
-    {
-        return request()->validate([
-            'title' => 'required',
-            'slug' => ['required', Rule::unique('posts', 'slug')->ignore($post)],
-            'thumbnail' => 'image|mimes:jpg,png,jpeg|max:512',
-            'excerpt' => 'required',
-            'body' => 'required',
-            'featured' => '',
-            'categories' => ['required', Rule::exists('categories', 'id')]
-        ]);
     }
 
     public function destroy(Post $post, FlasherInterface $flasher)

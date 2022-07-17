@@ -20,6 +20,7 @@
                                     <x-form.input name="title" :value="old('title', $post->title)" />
                                     <x-form.input name="slug" :value="old('slug', $post->slug)" />
                                     <x-form.input name="thumbnail" type="file" />
+                                    <input type="hidden" name="post_id" value="{{ $post->id }}" />
                                     <img src="/storage/{{$post->thumbnail}}" alt="" class="w-28 mt-4">
                                     <x-form.textarea name="excerpt">
                                         {{$post->excerpt}}

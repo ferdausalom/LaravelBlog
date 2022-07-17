@@ -4,16 +4,15 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PostController;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index']);
-Route::get('/about', fn () => view('front.about'))->name('about');
-Route::get('/contact', fn () => view('front.contact'))->name('contact');
+Route::view('/about', 'front.about')->name('about');
+Route::view('/contact', 'front.contact')->name('contact');
 
 Route::get('/details/post/{slug}', [HomeController::class, 'show'])->name('details.post');
-Route::get('/categories/{slug}', [HomeController::class, 'categoriesIndex'])->name('categories.show');
-Route::get('/authors/{slug}', [HomeController::class, 'authorsIndex'])->name('authors.show');
+Route::get('/categories/{slug}', [HomeController::class, 'categoryPosts'])->name('categories.show');
+Route::get('/authors/{slug}', [HomeController::class, 'authorPosts'])->name('authors.show');
 Route::post('/posts/{post:slug}/comments', [CommentController::class, 'store'])->name('comment.store');
 Route::post('/posts/{post:slug}/reply', [CommentController::class, 'replyStore'])->name('reply.store');
 
@@ -29,10 +28,6 @@ Route::middleware('admin')->group(function () {
             ['except' => ['show']]
         );
     });
-});
-
-Route::get('/symlink', function () {
-    Artisan::call('storage:link');
 });
 
 require __DIR__ . '/auth.php';

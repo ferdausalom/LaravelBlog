@@ -2,20 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
 use App\Models\Post;
-use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(Post $post)
     {
-        $posts = Cache::remember('posts-page-' . request('page', 1), now()->addMonth(1), function () {
-            return $this->latestPosts()->filter(request(['search']))->paginate(6);
+        $posts = Cache::remember('posts-page-' . request('page', 1), now()->addMonth(1), function () use ($post) {
+            return $post->getPosts();
         });
-        $featureds = Cache::remember('posts', now()->addMonth(1), function () {
-            return $this->latestPosts()->where('featured', '1')->get();
+        $featureds = Cache::remember('posts', now()->addMonth(1), function () use ($post) {
+            return $post->featuredPosts();
         });
         return view('front.index', [
             'posts' => $posts,
@@ -23,10 +21,10 @@ class HomeController extends Controller
         ]);
     }
 
-    public function show()
+    public function show(Post $post)
     {
-        $post = Cache::remember('post', now()->addMonth(1), function () {
-            return $this->latestPosts()->where('slug', request('slug'))->first();
+        $post = Cache::remember('post', now()->addMonth(1), function () use ($post) {
+            return $post->getPost();
         });
 
         return view('front.details', [
@@ -34,30 +32,24 @@ class HomeController extends Controller
         ]);
     }
 
-    public function latestPosts()
+    public function categoryPosts(Post $post)
     {
-        return Post::latest()->with(['categories', 'author', 'comments'])->withCount('allComments');
+        $getCatPosts = Cache::remember('categories-page-' . request('page', 1), now()->addMonth(1), function () use ($post) {
+            return $post->getCatPosts();
+        });
+
+        return view("front.show-categories", [
+            'posts' => $getCatPosts
+        ]);
     }
 
-    public function categoriesIndex()
+    public function authorPosts(Post $post)
     {
-        $category = new Category();
-        return $this->catAuthorQuery($category, 'author', 'categories');
-    }
-
-    public function authorsIndex()
-    {
-        $user = new User();
-        return $this->catAuthorQuery($user, 'categories', 'authors');
-    }
-
-    protected function catAuthorQuery($model, $term, $viewKey)
-    {
-        $query = $model::where('name', request('slug'))->firstOrFail();
-        $posts = $query->posts()->latest()->with($term, 'comments')->withCount('allComments');
-
-        return view("front.show-$viewKey", [
-            'posts' => $posts->filter(request(['search']))->paginate(6)
+        $getAuthorPosts = Cache::remember('authors-page-' . request('page', 1), now()->addMonth(1), function () use ($post) {
+            return $post->getAuthorPosts();
+        });
+        return view("front.show-authors", [
+            'posts' => $getAuthorPosts
         ]);
     }
 }

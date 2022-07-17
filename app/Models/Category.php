@@ -15,4 +15,9 @@ class Category extends Model
     {
         return $this->belongsToMany(Post::class);
     }
+
+    protected function setNameAttribute($name)
+    {
+        $this->attributes['name'] = strtolower($name);
+    }
 }

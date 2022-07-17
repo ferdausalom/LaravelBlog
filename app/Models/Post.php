@@ -39,6 +39,48 @@ class Post extends Model
         return $this->morphMany(Comment::class, 'commentable');
     }
 
+    public function getPosts()
+    {
+        return $this->latestPosts()->filter(request(['search']))->paginate(6);
+    }
+
+    public function featuredPosts()
+    {
+        return $this->latestPosts()->where('featured', '1')->get();
+    }
+
+    public function getPost()
+    {
+        return $this->latestPosts()->where('slug', request('slug'))->first();
+    }
+
+    protected function latestPosts()
+    {
+        return $this->latest()->with(['categories', 'author', 'comments'])->withCount('allComments');
+    }
+
+    public function getCatPosts()
+    {
+        return $this->catAuthorQuery(new Category(), 'author');
+        // $query = Category::where('name', request('slug'))->firstOrFail();
+        // return $query->posts()->latest()->with('author', 'comments')->withCount('allComments')->filter(request(['search']))->paginate(6);
+    }
+
+    public function getAuthorPosts()
+    {
+        // $model = new User();
+        return $this->catAuthorQuery(new User(), 'categories');
+
+        // $query = User::where('name', request('slug'))->firstOrFail();
+        // return $query->posts()->latest()->with('categories', 'comments')->withCount('allComments')->filter(request(['search']))->paginate(6);
+    }
+
+    protected function catAuthorQuery($model, $term)
+    {
+        $query = $model::where('name', request('slug'))->firstOrFail();
+        return $query->posts()->latest()->with($term, 'comments')->withCount('allComments')->filter(request(['search']))->paginate(6);
+    }
+
     public function storePost($request)
     {
         $this->user_id = auth()->user()->id;
@@ -50,6 +92,8 @@ class Post extends Model
         $this->body = $request->body;
         if ($request->featured) {
             $this->featured = 1;
+        } else {
+            $this->featured = 0;
         }
         $this->save();
 
